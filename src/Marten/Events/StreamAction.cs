@@ -22,7 +22,9 @@ public enum StreamActionType
     ///     Append these events to an existing stream. If the stream does not
     ///     already exist, it will be created with these events
     /// </summary>
-    Append
+    Append,
+
+    QuickAppend
 }
 
 /// <summary>
@@ -67,7 +69,7 @@ public class StreamAction
     ///     Is this action the start of a new stream or appending
     ///     to an existing stream?
     /// </summary>
-    public StreamActionType ActionType { get; }
+    public StreamActionType ActionType { get; internal set; }
 
     /// <summary>
     ///     If the stream was started as tagged to an aggregate type, that will
@@ -319,6 +321,32 @@ public class StreamAction
                 throw new EventStreamUnexpectedMaxEventIdException((object?)Key ?? Id, AggregateType,
                     ExpectedVersionOnServer.Value, currentVersion);
             }
+        }
+
+        Version = Events.Last().Version;
+    }
+
+    internal void PrepareEventsQuick(EventGraph graph, Queue<long> sequences, IMartenSession session)
+    {
+        var timestamp = graph.TimeProvider.GetUtcNow();
+
+        if (AggregateType != null)
+        {
+            AggregateTypeName = graph.AggregateAliasFor(AggregateType);
+        }
+
+        foreach (var @event in _events)
+        {
+            if (@event.Id == Guid.Empty)
+            {
+                @event.Id = CombGuidIdGeneration.NewGuid();
+            }
+
+            @event.Sequence = sequences.Dequeue();
+            @event.TenantId = session.TenantId;
+            @event.Timestamp = timestamp;
+
+            ProcessMetadata(@event, graph, session);
         }
 
         Version = Events.Last().Version;

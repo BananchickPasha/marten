@@ -51,6 +51,16 @@ public partial class EventGraph
                 stream.PrepareEvents(0, this, sequences, session);
                 session.QueueOperation(storage.InsertStream(stream));
             }
+            else if (stream.ActionType == StreamActionType.QuickAppend)
+            {
+                var handler = storage.QueryForStream(stream);
+                var state = session.ExecuteHandler(handler);
+                stream.PrepareEventsQuick(this, sequences, session);
+                if (state == null)
+                    session.QueueOperation(storage.InsertStream(stream));
+                else
+                    session.QueueOperation(storage.UpdateStreamVersion(stream));
+            }
             else
             {
                 var handler = storage.QueryForStream(stream);
@@ -109,7 +119,17 @@ public partial class EventGraph
                 stream.PrepareEvents(0, this, sequences, session);
                 session.QueueOperation(storage.InsertStream(stream));
             }
-            else
+            else if (stream.ActionType == StreamActionType.QuickAppend)
+            {
+                var handler = storage.QueryForStream(stream);
+                var state = await session.ExecuteHandlerAsync(handler, token).ConfigureAwait(false);
+                stream.PrepareEventsQuick(this, sequences, session);
+                if (state == null)
+                    session.QueueOperation(storage.InsertStream(stream));
+                else
+                    session.QueueOperation(storage.UpdateStreamVersion(stream));
+            }
+            else if(stream.ActionType == StreamActionType.Append)
             {
                 var handler = storage.QueryForStream(stream);
                 var state = await session.ExecuteHandlerAsync(handler, token).ConfigureAwait(false);

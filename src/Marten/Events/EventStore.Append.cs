@@ -7,6 +7,11 @@ namespace Marten.Events;
 
 internal partial class EventStore
 {
+    public StreamAction AppendQuick(string stream, params (long, object)[] events)
+    {
+        return _store.Events.AppendQuick(_session, stream, events);
+    }
+
     public StreamAction Append(Guid stream, IEnumerable<object> events)
     {
         //TODO NRT: We're ignoring null here as to not unintentionally change any downstream behaviour - Replace with null guards in the future.

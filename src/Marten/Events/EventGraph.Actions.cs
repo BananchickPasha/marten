@@ -6,6 +6,37 @@ namespace Marten.Events;
 
 public partial class EventGraph
 {
+    internal StreamAction AppendQuick(DocumentSessionBase session, string stream, params (long, object)[] events)
+    {
+        EnsureAsStringStorage(session);
+
+        if (stream.IsEmpty())
+        {
+            throw new ArgumentOutOfRangeException(nameof(stream), "The stream key cannot be null or empty");
+        }
+
+        var wrapped = events.Select(o =>
+        {
+            var e = BuildEvent(o.Item2);
+            e.StreamKey = stream;
+            e.Version = o.Item1;
+            return e;
+        }).ToArray();
+
+        if (session.WorkTracker.TryFindStream(stream, out var eventStream))
+        {
+            eventStream.AddEvents(wrapped);
+        }
+        else
+        {
+            eventStream = StreamAction.Append(stream, wrapped);
+            eventStream.TenantId = session.TenantId;
+            eventStream.ActionType = StreamActionType.QuickAppend;
+            session.WorkTracker.Streams.Add(eventStream);
+        }
+
+        return eventStream;
+    }
     internal StreamAction Append(DocumentSessionBase session, Guid stream, params object[] events)
     {
         EnsureAsGuidStorage(session);

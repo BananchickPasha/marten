@@ -168,4 +168,9 @@ public partial class ProjectionScenario
             }
         }).Description = $"Document {typeof(T).FullNameInCode()} with id '{id}' should not exist or be deleted";
     }
+
+    public StreamAction AppendQuick(string stream, params (long, object)[] events)
+    {
+        throw new NotImplementedException();
+    }
 }

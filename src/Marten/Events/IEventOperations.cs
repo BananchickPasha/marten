@@ -5,6 +5,8 @@ namespace Marten.Events;
 
 public interface IEventOperations
 {
+
+    StreamAction AppendQuick(string stream, params (long, object)[] events);
     /// <summary>
     ///     Append one or more events in order to an existing stream
     /// </summary>
