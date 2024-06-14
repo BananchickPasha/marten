@@ -350,6 +350,7 @@ public class StreamAction
         }
 
         Version = Events.Last().Version;
+        ExpectedVersionOnServer = Version;
     }
 
     internal static StreamAction ForReference(Guid streamId, string tenantId)
