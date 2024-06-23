@@ -60,7 +60,7 @@ internal class EventStatement: SelectorStatement
                 break;
         }
 
-        builder.Append(" ORDER BY d.seq_id");
+        builder.Append(" ORDER BY d.version");
         if (Limit > 0)
         {
             builder.Append(" LIMIT ");
