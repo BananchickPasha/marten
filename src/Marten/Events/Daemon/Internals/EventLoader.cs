@@ -60,7 +60,7 @@ internal class EventLoader: IEventLoader
             filter.Apply(builder);
         }
 
-        builder.Append(" order by d.seq_id limit ");
+        builder.Append(" order by d.version limit ");
         builder.Append(_batchSize);
 
         _command = builder.Compile();
